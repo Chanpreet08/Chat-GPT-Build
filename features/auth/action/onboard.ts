@@ -7,7 +7,6 @@ import { prisma } from "@/lib/db";
 export async function onBoard() {
   const user = await currentUser();
 
-  console.log("user", user);
   if (!user) {
     throw new Error("Unauthorized")
   }

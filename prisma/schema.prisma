@@ -12,13 +12,63 @@ datasource db {
   provider = "postgresql"
 }
 
+enum MessageRole {
+  USER
+  ASSISTANT
+  SYSTEM
+  TOOL
+}
+
+enum MessageStatus {
+  PENDING
+  COMPLETED
+  ERROR
+}
+
 model User {
-  id String @id @default(uuid())
-  clerkId String @unique
-  email String @unique
-  firstName String?
-  lastName String?
-  imageUrl String?
-  createdAt DateTime @default(now())
-  updatedAt DateTime @updatedAt
+  id            Int            @id @default(autoincrement())
+  clerkId       String         @unique
+  email         String         @unique
+  firstName     String?
+  lastName      String?
+  imageUrl      String?
+  createdAt     DateTime       @default(now())
+  updatedAt     DateTime       @updatedAt
+  conversations Conversation[]
+}
+
+model Conversation {
+  id            Int       @id @default(autoincrement())
+  userId        Int
+  user          User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  title         String    @default("New Conversation")
+  model         String
+  systemPrompt  String?
+  isPinned      Boolean   @default(false)
+  isArchived    Boolean   @default(false)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+  lastMessageAt DateTime  @default(now())
+  messages      Message[]
+
+  @@index([userId, lastMessageAt(sort: Desc)])
+  @@index([userId, isPinned, lastMessageAt(sort: Desc)])
+}
+
+model Message {
+  id              Int           @id @default(autoincrement())
+  conversationId  Int
+  conversation    Conversation  @relation(fields: [conversationId], references: [id], onDelete: Cascade)
+  role            MessageRole
+  status          MessageStatus
+  content         String        @db.Text
+  parts           Json?
+  metadata        Json?
+  parentMessageId Int?
+  parentMessage   Message?      @relation("ParentMessage", fields: [parentMessageId], references: [id], onDelete: Cascade)
+  children        Message[]     @relation("ParentMessage")
+  createdAt       DateTime      @default(now())
+  updatedAt       DateTime      @updatedAt
+
+  @@index([conversationId, createdAt(sort: Desc)])
 }
