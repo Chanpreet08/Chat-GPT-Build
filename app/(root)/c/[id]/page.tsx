@@ -12,7 +12,7 @@ const page = async ({ params }: ConversationPageProps) => {
     const { id } = await params;
 
     try {
-        const conversation = await getConversation(Number(id));
+        await getConversation(Number(id));
     } catch (error) {
         notFound();
     }

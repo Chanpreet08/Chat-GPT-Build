@@ -28,14 +28,21 @@ export const ConversationView = ({ conversationId, initialMessages }: Conversati
 
     const transport = useMemo(() => new DefaultChatTransport({
         api: "/api/chat",
-        prepareSendMessagesRequest: ({ id, messages }) => ({
-            body: {
-                conversationId: parseInt(id), message: messages.at(-1)
-            }
-        })
+        prepareSendMessagesRequest: ({ id, messages }) => {
+            const message =
+                [...messages].reverse().find((item) => item.role === "user") ??
+                messages.at(-1);
+
+            return {
+                body: {
+                    conversationId: parseInt(id),
+                    message,
+                },
+            };
+        },
     }), []);
 
-    const { messages, sendMessage, status } = useChat({
+    const { messages, sendMessage, status, error, regenerate, clearError } = useChat({
         id: conversationId,
         messages: initialMessages,
         transport,
@@ -50,6 +57,7 @@ export const ConversationView = ({ conversationId, initialMessages }: Conversati
     })
     const title =
     conversations?.find((item) => item.id === Number(conversationId))?.title ?? "Chat";
+    const isSending = status === "submitted" || status === "streaming";
 
     return (
         <div className="flex h-full min-h-0 flex-1 flex-col">
@@ -62,14 +70,22 @@ export const ConversationView = ({ conversationId, initialMessages }: Conversati
             {messages.length === 0 ? (
                 <ChatEmpty />
             ) : (
-                <ChatMessages messages={messages} status={status} />
+                <ChatMessages
+                    messages={messages}
+                    status={status}
+                    error={error}
+                    onRetry={() => {
+                        clearError();
+                        void regenerate();
+                    }}
+                />
             )}
 
             <ChatComposer
                 onSend={(text: string) => {
                     void sendMessage({ text });
                 }}
-                isSending={status !== "ready"}
+                isSending={isSending}
                 autoFocus
             />
         </div>

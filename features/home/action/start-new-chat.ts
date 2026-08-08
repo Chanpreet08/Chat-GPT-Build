@@ -8,7 +8,7 @@ export async function startNewChat() {
 
     const conversation = await prisma.conversation.create({
         data: { userId: user.id,
-            model: "gpt-4o-mini",
+            model: "",
             title: "New Chat",
         },
     });
