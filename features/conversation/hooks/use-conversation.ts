@@ -6,7 +6,7 @@ import { toast } from "sonner";
 import { queryKeys } from "@/features/conversation/libs/query-keys";
 import { listConversations, createConversation, deleteConversation, updateConversation } from "@/features/conversation/actions/conversation-action";
 
-export function useConversation() {
+export function useConversations() {
     return useQuery({
         queryKey: queryKeys.conversations.all,
         queryFn: listConversations,

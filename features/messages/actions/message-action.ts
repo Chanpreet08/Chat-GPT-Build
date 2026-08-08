@@ -102,3 +102,10 @@ export async function deleteMessage(messageId: number) {
         }
         throw error;
     }}
+
+    export async function getMessageId(): Promise<number> {
+        const rows = await prisma.$queryRaw<Array<{ nextval: bigint }>>`
+          SELECT nextval(pg_get_serial_sequence('"Message"', 'id')) AS nextval
+        `;
+        return Number(rows[0].nextval);
+      }
