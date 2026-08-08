@@ -1,9 +1,10 @@
 import { auth } from "@clerk/nextjs/server";
-import { convertToModelMessages, createUIMessageStreamResponse, createIdGenerator, streamText, toUIMessageStream, type UIMessage } from "ai";
+import { convertToModelMessages, createUIMessageStreamResponse, stepCountIs, streamText, toUIMessageStream, type UIMessage } from "ai";
 import { getConversation } from "@/features/conversation/actions/conversation-action";
 import { loadChatMessages, saveChatMessages } from "@/features/ai/actions/chat-store";
 import { getChatModel } from "@/features/ai/utils/model";
 import { getMessageId } from "@/features/messages/actions/message-action";
+import { getTools } from "@/features/ai/utils/tools";
 
 export async function POST(request: Request) {
 
@@ -33,8 +34,15 @@ export async function POST(request: Request) {
         
         const result = streamText({
             model: getChatModel(conversation.model),
-            system: conversation.systemPrompt ?? "You are a helpful assistant.",
+            system: conversation.systemPrompt ?? "You are a helpful assistant. You can use the webSearch and webExtract tools to search the web and extract information from websites. Your output should be very concise and to the point.",
             messages: await convertToModelMessages(messages),
+            tools: {
+                ...getTools(),
+            },
+            stopWhen: stepCountIs(5),
+            onError: ({ error }) => {
+                console.error("streamText error:", error);
+            },
         });
 
         result.consumeStream();
