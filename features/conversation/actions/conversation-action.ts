@@ -49,6 +49,18 @@ export async function listConversations() {
     return conversations;
 }
 
+export async function getConversation(id: number) {
+    const user = await requireUser();
+    const conversation = await prisma.conversation.findUnique({
+        where: { id: id, userId: user.id },
+    });
+
+    if (!conversation) {
+        throw new Error('Conversation not found');
+    }
+    return conversation;
+}
+
 export async function createConversation(title: string = 'New Conversation') {
     const user = await requireUser();
 
